@@ -433,4 +433,7 @@ body {
     .stat-value { font-size: 1.4rem; }
     .container { padding: 0.75rem; }
     .form-container { padding: 1.25rem; }
+    .leaflet-routing-container {
+    display: none !important;
+}
 }

@@ -11,49 +11,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-const users = [
-  { id: 1, username: 'demo', email: 'demo@bloodnet.app', password: 'demo123' }
-];
+const users = [];
 
-let donors = [
-  {
-    id: 1,
-    name: 'Arun Kumar',
-    phone: '+91 98765 11111',
-    email: 'arun@example.com',
-    blood_type: 'O+',
-    lat: 13.0412,
-    lng: 80.2341,
-    city: 'Chennai',
-    available: true,
-    last_donation: '2025-12-05'
-  },
-  {
-    id: 2,
-    name: 'Priya N',
-    phone: '+91 98765 22222',
-    email: 'priya@example.com',
-    blood_type: 'A+',
-    lat: 13.0618,
-    lng: 80.2503,
-    city: 'Chennai',
-    available: true,
-    last_donation: '2026-01-18'
-  },
-  {
-    id: 3,
-    name: 'Rahul S',
-    phone: '+91 98765 33333',
-    email: 'rahul@example.com',
-    blood_type: 'B+',
-    lat: 13.0852,
-    lng: 80.2214,
-    city: 'Chennai',
-    available: false,
-    last_donation: '2025-11-22'
-  }
-];
-
+let donors = [];
 const bloodBanks = [
   {
     id: 1,
