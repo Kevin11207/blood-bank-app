@@ -4,7 +4,7 @@
 // Example command: ngrok http 3000
 // ============================================================
 // Leave empty for local development (uses http://localhost:3000/api)
-const NGROK_BASE_URL = '';
+const NGROK_BASE_URL = 'https://blood-bank-app-production-50fe.up.railway.app';
 const LOCAL_BASE_URL = 'http://localhost:3000';
 const API_BASE = `${NGROK_BASE_URL || LOCAL_BASE_URL}/api`;
 
