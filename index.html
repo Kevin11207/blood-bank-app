@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>🩸 Blood Donor Network</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-drop">🩸</div>
+            <div class="loading-bar"><div class="loading-fill"></div></div>
+            <p class="loading-text">Locating donors near you...</p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <span class="logo-icon">🩸</span>
+                <span class="logo-text">BloodNet</span>
+            </div>
+            <div class="nav-links">
+                <a href="#" onclick="showTab('map')" class="nav-link" data-tab="map">
+                    <span class="nav-icon">🗺️</span><span>Find Blood</span>
+                </a>
+                <a href="#" onclick="showTab('register')" class="nav-link" data-tab="register">
+                    <span class="nav-icon">➕</span><span>Donate</span>
+                </a>
+                <a href="#" onclick="showTab('stats')" class="nav-link" data-tab="stats">
+                    <span class="nav-icon">📊</span><span>Stats</span>
+                </a>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        </div>
+        <div class="mobile-nav" id="mobile-nav">
+            <a href="#" onclick="showTab('map'); toggleMobileMenu()">🗺️ Find Blood</a>
+            <a href="#" onclick="showTab('register'); toggleMobileMenu()">➕ Donate</a>
+            <a href="#" onclick="showTab('stats'); toggleMobileMenu()">📊 Stats</a>
+        </div>
+    </nav>
+
+    <main class="container">
+
+        <!-- Map Tab -->
+        <section id="map-tab" class="tab active">
+            <div class="content-wrapper">
+                <div id="map" class="map-container">
+                    <div class="map-loading" id="map-loading">
+                        <div class="spinner"></div>
+                        <p>Loading map...</p>
+                    </div>
+                </div>
+
+                <aside class="sidebar">
+                    <!-- Location -->
+                    <div class="sidebar-block">
+                        <div class="sidebar-block-title">📍 Location</div>
+                        <div class="location-selectors">
+                            <select id="country-selector" class="selector">
+                                <option value="">Select Country</option>
+                                <option value="USA">🇺🇸 USA</option>
+                                <option value="India">🇮🇳 India</option>
+                            </select>
+                            <select id="city-selector" class="selector" disabled>
+                                <option value="">Select City</option>
+                            </select>
+                        </div>
+                        <button id="use-current-location" class="btn btn-outline btn-sm btn-full mt-sm">
+                            📍 Use My Location
+                        </button>
+                        <p id="location-status" class="location-status-text">Select a city to begin</p>
+                    </div>
+
+                    <!-- Account -->
+                    <div class="sidebar-block">
+                        <div class="sidebar-block-title">👤 Account</div>
+                        <div id="login-form" class="auth-form">
+                            <input id="login-email" class="input-field" placeholder="Email" type="email" autocomplete="email"/>
+                            <input id="login-password" class="input-field" placeholder="Password" type="password" autocomplete="current-password"/>
+                            <div class="auth-buttons">
+                                <button id="login-button" class="btn btn-primary btn-sm">Login</button>
+                                <button id="register-button" class="btn btn-outline btn-sm">Register</button>
+                            </div>
+                        </div>
+                        <div id="register-form" class="auth-form" style="display:none;">
+                            <input id="register-username" class="input-field" placeholder="Username" autocomplete="username"/>
+                            <input id="register-email" class="input-field" placeholder="Email" type="email" autocomplete="email"/>
+                            <input id="register-password" class="input-field" placeholder="Password" type="password" autocomplete="new-password"/>
+                            <div class="auth-buttons">
+                                <button id="register-submit" class="btn btn-primary btn-sm">Create Account</button>
+                                <button id="register-cancel" class="btn btn-outline btn-sm">Cancel</button>
+                            </div>
+                        </div>
+                        <div id="logged-in-panel" class="logged-in-panel" style="display:none;">
+                            <div class="user-badge">
+                                <span class="user-avatar">👤</span>
+                                <span id="login-status" class="login-status-text">Not logged in</span>
+                            </div>
+                            <button class="btn btn-outline btn-sm btn-full" onclick="logout()">Logout</button>
+                        </div>
+                        <p id="login-status-inline" class="login-status-text" style="display:none;">Not logged in</p>
+                        <div class="online-users">
+                            <span class="online-dot"></span>
+                            <span id="online-count">0</span> online
+                            <ul id="online-users-list" style="display:none;"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Nearest Blood Bank -->
+                    <div class="sidebar-block">
+                        <div class="sidebar-block-title">🏥 Nearest Blood Bank</div>
+                        <div id="nearest-bank" class="location-card">
+                            <div class="skeleton-loader">
+                                <div class="skeleton-line"></div>
+                                <div class="skeleton-line short"></div>
+                                <div class="skeleton-line"></div>
+                            </div>
+                        </div>
+                        <button id="request-delivery-bank" class="btn btn-primary btn-full mt-sm" disabled>
+                            🚗 Request from Bank
+                        </button>
+                    </div>
+
+                    <!-- Nearest Donor -->
+                    <div class="sidebar-block">
+                        <div class="sidebar-block-title-row">
+                            <span>👤 Nearest Donor</span>
+                            <select id="blood-type-filter" class="mini-select">
+                                <option value="">All Types</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+                        <div id="nearest-donor" class="location-card">
+                            <div class="skeleton-loader">
+                                <div class="skeleton-line"></div>
+                                <div class="skeleton-line short"></div>
+                                <div class="skeleton-line"></div>
+                            </div>
+                        </div>
+                        <button id="request-delivery-donor" class="btn btn-primary btn-full mt-sm" disabled>
+                            🚗 Request from Donor
+                        </button>
+                    </div>
+
+                    <div class="sidebar-block">
+                        <div class="sidebar-block-title">🛣️ Route Details</div>
+                        <div id="route-summary" class="location-card">
+                            <p style="color:var(--text-muted);font-size:0.85rem;">Select a bank or donor to see route distance and travel time.</p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- Register Tab -->
+        <section id="register-tab" class="tab">
+            <div class="page-header">
+                <h1>Become a Donor</h1>
+                <p>Your blood can save up to 3 lives. Register today.</p>
+            </div>
+            <div class="form-container">
+                <form id="donor-registration-form" class="donor-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="donor-name">Full Name <span class="required">*</span></label>
+                            <input type="text" id="donor-name" required placeholder="Your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="donor-phone">Phone <span class="required">*</span></label>
+                            <input type="tel" id="donor-phone" required placeholder="+91 xxxxx xxxxx">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="donor-email">Email</label>
+                            <input type="email" id="donor-email" placeholder="Optional">
+                        </div>
+                        <div class="form-group">
+                            <label for="donor-blood-type">Blood Type <span class="required">*</span></label>
+                            <select id="donor-blood-type" required>
+                                <option value="">Select</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="donor-city">City <span class="required">*</span></label>
+                        <input type="text" id="donor-city" required placeholder="Your city">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="donor-location-consent" required>
+                        <label for="donor-location-consent">Allow location access for donor matching</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-large">
+                        <span>Register as Donor</span>
+                        <span class="btn-icon">🩸</span>
+                    </button>
+                    <div id="registration-message" class="message"></div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Statistics Tab -->
+        <section id="stats-tab" class="tab">
+            <div class="page-header">
+                <h1>Network Statistics</h1>
+                <p>Live data from the Blood Donor Network</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🏥</div>
+                    <div class="stat-value" id="stat-banks">—</div>
+                    <div class="stat-label">Blood Banks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="stat-donors">—</div>
+                    <div class="stat-label">Registered Donors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="stat-active">—</div>
+                    <div class="stat-label">Active Donors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-value" id="stat-requests">—</div>
+                    <div class="stat-label">Delivery Requests</div>
+                </div>
+            </div>
+
+            <div class="stats-panels">
+                <div class="panel">
+                    <div class="panel-title">📋 Recent Delivery Requests</div>
+                    <div id="recent-requests-list" class="requests-list">
+                        <div class="skeleton-loader"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">🔒 Security Status</div>
+                    <div id="security-info" class="security-info">
+                        <div class="skeleton-loader"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>🩸 BloodNet &nbsp;·&nbsp; Saving lives, one donation at a time &nbsp;·&nbsp; © 2026</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
